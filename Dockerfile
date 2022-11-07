@@ -8,9 +8,11 @@ RUN git clone https://git.zx2c4.com/wireguard-go && \
     make && \
     make install
 
+# Pull wireguard tools and build
 ENV WITH_WGQUICK=yes
 RUN git clone https://git.zx2c4.com/wireguard-tools && \
     cd wireguard-tools && \
     cd src && \
     make && \
     make install
+
