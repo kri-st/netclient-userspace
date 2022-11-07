@@ -1,4 +1,4 @@
-FROM docker.io/library/golang:1.19 as builder
+FROM docker.io/library/golang:1.19 AS builder
 # add glib support daemon manager
 WORKDIR /app
 
@@ -27,7 +27,6 @@ ENV GO111MODULE=auto
 RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-w -s" -o netclient-app netclient/main.go
 
 FROM registry.fedoraproject.org/fedora:36
-
 LABEL maintainer="Krist van Besien <krist.vanbesien@gmail.com>"\
       description="userpsace netclient image"
       
@@ -35,6 +34,8 @@ COPY --from=builder /usr/bin/wireguard-go /usr/bin/wg* /usr/bin/
 COPY --from=builder /app/netmaker/netclient-app ./netclient
 COPY --from=builder /app/netmaker/scripts/netclient.sh .
 RUN chmod 0755 netclient && chmod 0755 netclient.sh
+COPY ./netclient.service /usr/lib/systemd/system
+RUN systemctl enable netclient.service
 
 ENV WG_QUICK_USERSPACE_IMPLEMENTATION=wireguard-go    
       
