@@ -1,0 +1,7 @@
+= Netclient
+
+This repository builds a docker image that contains the userspace implementation of netclient. 
+The userspace implementation uses wireguard-go and is thus not dependent on the kernel supporting wireguard.
+
+I created this because none of the docker images that Netmaker themselves produce appear to work. 
+
