@@ -1,0 +1,54 @@
+name: Multiarch build
+
+on:
+  push:
+    paths:
+      - 'Dockerfile'
+   
+      
+env:
+  IMAGE_NAME: mdnsbase
+  IMAGE_TAG: latest
+  IMAGE_REGISTRY: quay.io
+  IMAGE_NAMESPACE: krist
+  
+jobs:
+  build:
+    name: Build and push multi-arch image
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v2
+        
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Get Date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%dT%H:%M:%SZ')"
+              
+      - name: Build image 
+        id: build-image
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: ${{ env.IMAGE_NAME }}
+          tags: ${{ env.IMAGE_TAG }} ${{ env.GITHUB_REF }}
+          archs: amd64, arm64
+          build-args: |
+            BUILD_DATE=${{ steps.date.outputs.date }}
+            BUILD_VERSION=${{ env.GITHUB_REF }}
+            BUILD_REF=${{ env.GITHUB_SHA }}
+          dockerfiles: |
+            ./Dockerfile
+            
+      - name: Push To quay.io
+        id: push-to-quay
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.build-image.outputs.image }}
+          tags: ${{ steps.build-image.outputs.tags }}
+          registry: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAMESPACE }}
+          username: ${{ secrets.QUAY_USER }}
+          password: ${{ secrets.QUAY_PWD }}
+
+      - name: Print image url
+        run: echo "Image pushed to ${{ steps.push-to-quay.outputs.registry-paths }}"
